@@ -8,11 +8,6 @@ async function authMiddleware(req, res, next) {
 
     // 🔥 Se não tem token
     if (!token) {
-      // Se é rota /me → apenas retorna 401 silencioso
-      if (req.originalUrl.startsWith('/api/auth/me')) {
-        return res.status(401).json({ authenticated: false });
-      }
-
       return res.status(401).json({
         error: "Sessão expirada ou não identificada."
       });

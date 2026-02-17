@@ -68,17 +68,25 @@ router.post('/', async (req, res) => {
       }
     );
 
-    // 🍪 Definir cookie
-    const isProduction = process.env.NODE_ENV === 'production';
+    // 🍪 Definir cookie adaptável (Local vs Produção)
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
 
-    res.cookie('token', token, {
+    // Se for localhost (HTTP), não podemos usar SameSite=None + Secure.
+    // Precisamos usar SameSite=Lax + Secure=false.
+    const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      domain: '.le2oap.easypanel.host',
+      secure: isHttps, // False em localhost (HTTP), True em Prod (HTTPS)
+      sameSite: isHttps ? 'none' : 'lax',
       path: '/',
       maxAge: 8 * 60 * 60 * 1000
-    });
+    };
+
+    // Só definimos o domínio se estivermos na nuvem
+    if (isHttps && req.headers.host && req.headers.host.includes('easypanel.host')) {
+      cookieOptions.domain = '.le2oap.easypanel.host';
+    }
+
+    res.cookie('token', token, cookieOptions);
 
     // 🔥 SE FOR PRIMEIRO LOGIN → FORÇA TROCA
     if (user.must_change_password) {
