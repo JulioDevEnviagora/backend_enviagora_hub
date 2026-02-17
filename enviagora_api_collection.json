@@ -1,0 +1,492 @@
+{
+    "info": {
+        "_postman_id": "7a3b4c5d-1e2f-3g4h-5i6j-7k8l9m0n1o2p",
+        "name": "Enviagora Hub API",
+        "description": "Coleção de rotas para o sistema de RH Enviagora Hub. Inclui gestão de colaboradores e processamento automático de holerites via PDF.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Autenticação",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@enviagora.com.br\",\n    \"password\": \"senha123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Realiza login no sistema. Em caso de sucesso, define um cookie 'token' que é enviado automaticamente nas próximas requisições."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verificar Sessão",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/session",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "session"
+                            ]
+                        },
+                        "description": "Verifica se o usuário está autenticado e retorna os dados básicos do perfil."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Esqueci minha senha (Solicitar)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"usuario@email.com\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/forgot-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "forgot-password"
+                            ]
+                        },
+                        "description": "Gera um token de recuperação de senha e envia para o e-mail do usuário."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Resetar Senha (Token)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"usuario@email.com\",\n    \"token\": \"TOKEN_RECEBIDO_POR_EMAIL\",\n    \"newPassword\": \"nova_senha_123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/reset-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "reset-password"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Colaboradores",
+            "item": [
+                {
+                    "name": "Listar Colaboradores",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/colaboradores",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "colaboradores"
+                            ]
+                        },
+                        "description": "Lista todos os colaboradores cadastrados no sistema."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Buscar Colaborador por ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/colaboradores/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "colaboradores",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "ID_DO_USUARIO"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Criar Colaborador",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"nome\": \"João Silva\",\n    \"email\": \"joao@enviagora.com.br\",\n    \"cpf\": \"123.456.789-00\",\n    \"password\": \"123456\",\n    \"role\": \"funcionario\",\n    \"codigo_holerite\": \"1001\",\n    \"setor\": \"Logística\",\n    \"cargo\": \"Ajudante\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/colaboradores",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "colaboradores"
+                            ]
+                        },
+                        "description": "Cria um novo colaborador. O 'codigo_holerite' é fundamental para que o sistema consiga vincular PDFs automaticamente no futuro."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Editar Colaborador",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"nome\": \"João Silva Editado\",\n    \"setor\": \"Transportes\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/colaboradores/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "colaboradores",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "ID_DO_USUARIO"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Alterar Senha",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"newPassword\": \"nova_senha_66\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/colaboradores/:id/password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "colaboradores",
+                                ":id",
+                                "password"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "ID_DO_USUARIO"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Deletar Colaborador",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/colaboradores/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "colaboradores",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "ID_DO_USUARIO"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Holerites",
+            "item": [
+                {
+                    "name": "Listar Holerites",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/holerites",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "holerites"
+                            ]
+                        },
+                        "description": "Lista todos os holerites processados. Contém metadados como competência e link para o arquivo no storage."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Upload de PDFs (Automático)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "competencia",
+                                    "value": "Janeiro 2024",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "files",
+                                    "description": "Selecione um ou mais PDFs",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/holerites/upload",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "holerites",
+                                "upload"
+                            ]
+                        },
+                        "description": "Endpoint inteligente. Você envia um lote de PDFs, o sistema lê o conteúdo de cada um, identifica o funcionário pelo número da matrícula/código dentro do documento e vincula automaticamente ao colaborador correto."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Download Holerite",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/holerites/:id/download",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "holerites",
+                                ":id",
+                                "download"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "ID_DO_HOLERITE"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Editar Holerite",
+                    "request": {
+                        "method": "PUT",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "competencia",
+                                    "value": "Fevereiro 2024",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "file",
+                                    "description": "Se quiser substituir o PDF, envie aqui",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/holerites/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "holerites",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "ID_DO_HOLERITE"
+                                }
+                            ]
+                        },
+                        "description": "Caso envie um novo arquivo, o sistema valida se o PDF pertence ao mesmo colaborador antes de substituir no Storage."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Deletar Holerite",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/holerites/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "holerites",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "ID_DO_HOLERITE"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Resumo Estatístico",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/holerites/stats/summary",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "holerites",
+                                "stats",
+                                "summary"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3005",
+            "type": "string"
+        }
+    ]
+}
