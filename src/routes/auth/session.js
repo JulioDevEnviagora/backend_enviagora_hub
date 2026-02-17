@@ -24,16 +24,16 @@ router.get('/me', authMiddleware, async (req, res) => {
 // ===============================
 router.post('/logout', (req, res) => {
   try {
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
 
     const cookieOptions = {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: isHttps,
+      sameSite: isHttps ? 'none' : 'lax',
       path: '/'
     };
 
-    if (isProduction) {
+    if (req.headers.host && req.headers.host.includes('easypanel.host')) {
       cookieOptions.domain = '.le2oap.easypanel.host';
     }
 

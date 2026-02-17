@@ -73,17 +73,20 @@ router.post('/', async (req, res) => {
     );
 
     // 🍪 Definir cookie
-    const isProduction = process.env.NODE_ENV === 'production';
+    // Para aceitar cookies em domínios diferentes (Localhost -> Prod), 
+    // precisamos de SameSite=None e Secure=true.
+    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
 
     const cookieOptions = {
       httpOnly: true,
-      secure: isProduction, // HTTPS apenas em produção
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: isHttps, // Fundamental para SameSite=None
+      sameSite: isHttps ? 'none' : 'lax', // 'none' permite cross-site (localhost -> prod)
       path: '/',
       maxAge: 8 * 60 * 60 * 1000
     };
 
-    if (isProduction) {
+    // Se estivermos no domínio da easypanel, opcionalmente definimos o domínio principal
+    if (req.headers.host && req.headers.host.includes('easypanel.host')) {
       cookieOptions.domain = '.le2oap.easypanel.host';
     }
 
