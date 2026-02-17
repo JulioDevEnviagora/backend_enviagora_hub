@@ -18,7 +18,7 @@ const app = express();
 const port = process.env.PORT || 3005;
 
 // ===============================
-// CORS CONFIG PROFISSIONAL
+// CORS CONFIG CORRIGIDO
 // ===============================
 
 const allowedOrigins = [
@@ -26,28 +26,26 @@ const allowedOrigins = [
     "https://teste-n8n-frontend.le2oap.easypanel.host"
 ];
 
-// Se quiser usar variável de ambiente:
 if (process.env.FRONTEND_URL) {
     allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ""));
 }
 
 app.use(cors({
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true); // Postman, server-to-server
+        if (!origin) return callback(null, true);
 
-        if (allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+        const normalizedOrigin = origin.replace(/\/$/, "");
+
+        if (allowedOrigins.includes(normalizedOrigin)) {
             callback(null, true);
         } else {
             callback(new Error("Not allowed by CORS"));
         }
     },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    credentials: true
 }));
 
-// Garantir preflight
-app.options('*', cors());
+// ⚠️ REMOVIDO app.options('*', cors()); (quebrava no Express novo)
 
 // ===============================
 // Middlewares Globais
