@@ -11,12 +11,14 @@ router.post('/', async (req, res) => {
 
     // 📌 Validação básica
     if (!email || !password) {
+      console.log('[Login Debug] Email ou senha faltando no body:', req.body);
       return res.status(400).json({
         error: 'Email e senha são obrigatórios',
       });
     }
 
     const emailNormalizado = email.toLowerCase();
+    console.log('[Login Debug] Tentativa de login para:', emailNormalizado);
 
     // 🔎 Buscar usuário
     const { data: user, error } = await supabase
@@ -26,13 +28,14 @@ router.post('/', async (req, res) => {
       .maybeSingle();
 
     if (error) {
-      console.error('Erro ao buscar usuário:', error);
+      console.error('[Login Debug] Erro ao buscar usuário no Supabase:', error);
       return res.status(500).json({
         error: 'Erro ao processar login',
       });
     }
 
     if (!user) {
+      console.log('[Login Debug] Usuário não encontrado no banco.');
       return res.status(401).json({
         error: 'Email ou senha inválidos',
       });
@@ -42,6 +45,7 @@ router.post('/', async (req, res) => {
     const senhaValida = await bcrypt.compare(password, user.password);
 
     if (!senhaValida) {
+      console.log('[Login Debug] Senha incorreta.');
       return res.status(401).json({
         error: 'Email ou senha inválidos',
       });
