@@ -36,7 +36,8 @@ app.use(cors({
 
         const normalizedOrigin = origin.replace(/\/$/, "");
 
-        if (allowedOrigins.includes(normalizedOrigin)) {
+        // Permite localhost e 127.0.0.1 em qualquer porta para desenvolvimento local
+        if (allowedOrigins.includes(normalizedOrigin) || normalizedOrigin.startsWith('http://localhost') || normalizedOrigin.startsWith('http://127.0.0.1')) {
             callback(null, true);
         } else {
             callback(new Error("Not allowed by CORS"));

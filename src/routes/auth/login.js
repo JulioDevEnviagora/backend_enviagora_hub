@@ -69,16 +69,21 @@ router.post('/', async (req, res) => {
     );
 
     // 🍪 Definir cookie
- const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === 'production';
 
-res.cookie('token', token, {
-  httpOnly: true,
-  secure: true,
-  sameSite: 'none',
-  domain: '.le2oap.easypanel.host',
-  path: '/',
-  maxAge: 8 * 60 * 60 * 1000
-});
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction, // HTTPS apenas em produção
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
+      maxAge: 8 * 60 * 60 * 1000
+    };
+
+    if (isProduction) {
+      cookieOptions.domain = '.le2oap.easypanel.host';
+    }
+
+    res.cookie('token', token, cookieOptions);
 
     // 🔥 SE FOR PRIMEIRO LOGIN → FORÇA TROCA
     if (user.must_change_password) {

@@ -26,13 +26,18 @@ router.post('/logout', (req, res) => {
   try {
     const isProduction = process.env.NODE_ENV === 'production';
 
-    res.clearCookie('token', {
-  httpOnly: true,
-  secure: true,
-  sameSite: 'none',
-  domain: '.le2oap.easypanel.host',
-  path: '/',
-});
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/'
+    };
+
+    if (isProduction) {
+      cookieOptions.domain = '.le2oap.easypanel.host';
+    }
+
+    res.clearCookie('token', cookieOptions);
 
     return res.status(200).json({
       message: 'Logout realizado com sucesso',
