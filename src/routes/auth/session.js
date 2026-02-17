@@ -33,10 +33,6 @@ router.post('/logout', (req, res) => {
       path: '/'
     };
 
-    if (req.headers.host && req.headers.host.includes('easypanel.host')) {
-      cookieOptions.domain = '.le2oap.easypanel.host';
-    }
-
     res.clearCookie('token', cookieOptions);
 
     return res.status(200).json({

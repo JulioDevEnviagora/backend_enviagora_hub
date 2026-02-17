@@ -85,11 +85,8 @@ router.post('/', async (req, res) => {
       maxAge: 8 * 60 * 60 * 1000
     };
 
-    // Se estivermos no domínio da easypanel, opcionalmente definimos o domínio principal
-    if (req.headers.host && req.headers.host.includes('easypanel.host')) {
-      cookieOptions.domain = '.le2oap.easypanel.host';
-    }
-
+    // Removido o domínio explícito para melhorar a compatibilidade com o localhost
+    // O navegador associará o cookie ao host do backend automaticamente.
     res.cookie('token', token, cookieOptions);
 
     // 🔥 SE FOR PRIMEIRO LOGIN → FORÇA TROCA
