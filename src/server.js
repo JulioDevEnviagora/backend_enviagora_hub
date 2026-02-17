@@ -51,10 +51,14 @@ app.use(cors({
 // Middlewares Globais
 // ===============================
 
+// ⚠️ IMPORTANTE: cookieParser() deve vir DEPOIS do CORS
 app.use(cookieParser());
 
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    console.log(`[Debug] Origin: ${req.headers.origin}`);
+    console.log(`[Debug] Cookies recebidos:`, req.cookies);
+    console.log(`[Debug] Headers Cookie:`, req.headers.cookie);
     next();
 });
 
