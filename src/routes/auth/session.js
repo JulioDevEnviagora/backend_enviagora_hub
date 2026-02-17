@@ -24,16 +24,15 @@ router.get('/me', authMiddleware, async (req, res) => {
 // ===============================
 router.post('/logout', (req, res) => {
   try {
-    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    const cookieOptions = {
+    res.clearCookie('token', {
       httpOnly: true,
-      secure: isHttps,
-      sameSite: isHttps ? 'none' : 'lax',
-      path: '/'
-    };
-
-    res.clearCookie('token', cookieOptions);
+      secure: true,
+      sameSite: 'none',
+      domain: '.le2oap.easypanel.host',
+      path: '/',
+    });
 
     return res.status(200).json({
       message: 'Logout realizado com sucesso',

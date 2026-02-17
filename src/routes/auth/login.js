@@ -11,14 +11,12 @@ router.post('/', async (req, res) => {
 
     // 📌 Validação básica
     if (!email || !password) {
-      console.log('[Login Debug] Email ou senha faltando no body:', req.body);
       return res.status(400).json({
         error: 'Email e senha são obrigatórios',
       });
     }
 
     const emailNormalizado = email.toLowerCase();
-    console.log('[Login Debug] Tentativa de login para:', emailNormalizado);
 
     // 🔎 Buscar usuário
     const { data: user, error } = await supabase
@@ -28,14 +26,13 @@ router.post('/', async (req, res) => {
       .maybeSingle();
 
     if (error) {
-      console.error('[Login Debug] Erro ao buscar usuário no Supabase:', error);
+      console.error('Erro ao buscar usuário:', error);
       return res.status(500).json({
         error: 'Erro ao processar login',
       });
     }
 
     if (!user) {
-      console.log('[Login Debug] Usuário não encontrado no banco.');
       return res.status(401).json({
         error: 'Email ou senha inválidos',
       });
@@ -45,7 +42,6 @@ router.post('/', async (req, res) => {
     const senhaValida = await bcrypt.compare(password, user.password);
 
     if (!senhaValida) {
-      console.log('[Login Debug] Senha incorreta.');
       return res.status(401).json({
         error: 'Email ou senha inválidos',
       });
@@ -73,21 +69,16 @@ router.post('/', async (req, res) => {
     );
 
     // 🍪 Definir cookie
-    // Para aceitar cookies em domínios diferentes (Localhost -> Prod), 
-    // precisamos de SameSite=None e Secure=true.
-    const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    const cookieOptions = {
+    res.cookie('token', token, {
       httpOnly: true,
-      secure: isHttps, // Fundamental para SameSite=None
-      sameSite: isHttps ? 'none' : 'lax', // 'none' permite cross-site (localhost -> prod)
+      secure: true,
+      sameSite: 'none',
+      domain: '.le2oap.easypanel.host',
       path: '/',
       maxAge: 8 * 60 * 60 * 1000
-    };
-
-    // Removido o domínio explícito para melhorar a compatibilidade com o localhost
-    // O navegador associará o cookie ao host do backend automaticamente.
-    res.cookie('token', token, cookieOptions);
+    });
 
     // 🔥 SE FOR PRIMEIRO LOGIN → FORÇA TROCA
     if (user.must_change_password) {
