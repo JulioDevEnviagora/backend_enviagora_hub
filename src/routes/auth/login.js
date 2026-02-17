@@ -73,10 +73,11 @@ router.post('/', async (req, res) => {
 
 res.cookie('token', token, {
   httpOnly: true,
-  secure: isProduction, // true na VPS, false no localhost
-  sameSite: isProduction ? 'none' : 'lax',
-  maxAge: 8 * 60 * 60 * 1000,
-  path: '/'
+  secure: true,
+  sameSite: 'none',
+  domain: '.le2oap.easypanel.host',
+  path: '/',
+  maxAge: 8 * 60 * 60 * 1000
 });
 
     // 🔥 SE FOR PRIMEIRO LOGIN → FORÇA TROCA
