@@ -69,10 +69,12 @@ router.post('/', async (req, res) => {
     );
 
     // 🍪 Definir cookie
+    const isProduction = process.env.NODE_ENV === 'production';
+
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProduction, // true em produção (HTTPS)
+      sameSite: isProduction ? 'none' : 'lax', // 'none' necessário para cross-origin HTTPS
       maxAge: 8 * 60 * 60 * 1000,
     });
 

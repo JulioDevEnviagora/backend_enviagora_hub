@@ -24,10 +24,12 @@ router.get('/me', authMiddleware, async (req, res) => {
 // ===============================
 router.post('/logout', (req, res) => {
   try {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     res.clearCookie('token', {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: false, // true em produção (HTTPS)
+      sameSite: isProduction ? 'none' : 'lax',
+      secure: isProduction, // true em produção (HTTPS)
     });
 
     return res.status(200).json({
