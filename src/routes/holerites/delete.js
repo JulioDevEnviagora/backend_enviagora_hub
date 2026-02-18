@@ -1,3 +1,5 @@
+const express = require("express");
+const { supabase } = require("../../config/db");
 const authMiddleware = require("../../middlewares/authMiddleware");
 const authorizeRoles = require("../../middlewares/authorizeRoles");
 

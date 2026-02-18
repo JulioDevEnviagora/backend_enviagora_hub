@@ -1,4 +1,6 @@
+const express = require("express");
 const authMiddleware = require("../../middlewares/authMiddleware");
+const { supabase } = require("../../config/db");
 
 const router = express.Router();
 
