@@ -13,6 +13,8 @@ const forgotPasswordRoutes = require('./routes/auth/forgotPassword');
 const resetPasswordRoutes = require('./routes/auth/resetPassword');
 const colaboradoresRoutes = require('./routes/colaboradores/colaboradores');
 const holeritesRoutes = require('./routes/holerites/holerites');
+const newsRoutes = require('./routes/news/news');
+const announcementsRoutes = require('./routes/announcements/announcements');
 
 const app = express();
 const port = process.env.PORT || 3005;
@@ -88,6 +90,17 @@ app.use(
     "/api/holerites",
     authMiddleware,
     holeritesRoutes
+);
+
+app.use(
+    "/api/news",
+    newsRoutes
+);
+
+app.use(
+    "/api/announcements",
+    authMiddleware,
+    announcementsRoutes
 );
 
 // ===============================
