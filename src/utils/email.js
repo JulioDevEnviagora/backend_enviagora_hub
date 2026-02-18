@@ -1,15 +1,15 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
 });
 
 function emailBase(conteudo) {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"/>
@@ -97,7 +97,7 @@ function emailBase(conteudo) {
 }
 
 async function enviarEmailAcesso(emailDestino, nome, senhaProvisoria) {
-    const conteudo = `
+  const conteudo = `
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:800;color:#1a2e24;letter-spacing:-0.8px;line-height:1.2;">
         Bem-vindo ao Hub, <span style="color:#1a4731;">${nome}!</span>
       </h1>
@@ -154,18 +154,18 @@ async function enviarEmailAcesso(emailDestino, nome, senhaProvisoria) {
       </table>
     `;
 
-    await transporter.sendMail({
-        from: `"Enviagora RH" <${process.env.EMAIL_USER}>`,
-        to: emailDestino,
-        subject: "Seu acesso ao Enviagora Hub foi criado",
-        html: emailBase(conteudo)
-    });
+  await transporter.sendMail({
+    from: `"Enviagora RH" <${process.env.EMAIL_USER}>`,
+    to: emailDestino,
+    subject: "Seu acesso ao Enviagora Hub foi criado",
+    html: emailBase(conteudo)
+  });
 }
 
 async function enviarEmailResetSenha(emailDestino, token) {
-    const resetLink = `${process.env.FRONTEND_URL}/resetar-senha?token=${token}&email=${emailDestino}`;
+  const resetLink = `${process.env.FRONTEND_URL}/resetar-senha?token=${token}&email=${emailDestino}`;
 
-    const conteudo = `
+  const conteudo = `
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:800;color:#1a2e24;letter-spacing:-0.8px;line-height:1.2;">
         Recuperação<br/>de Senha
       </h1>
@@ -227,12 +227,96 @@ async function enviarEmailResetSenha(emailDestino, token) {
       </table>
     `;
 
-    await transporter.sendMail({
-        from: `"Enviagora RH" <${process.env.EMAIL_USER}>`,
-        to: emailDestino,
-        subject: "Recuperação de Senha — Enviagora Hub",
-        html: emailBase(conteudo)
-    });
+  await transporter.sendMail({
+    from: `"Enviagora RH" <${process.env.EMAIL_USER}>`,
+    to: emailDestino,
+    subject: "Recuperação de Senha — Enviagora Hub",
+    html: emailBase(conteudo)
+  });
 }
 
-module.exports = { enviarEmailAcesso, enviarEmailResetSenha };
+async function enviarAvisoGeral(emails, titulo, mensagem, tipo) {
+  const emojis = { urgente: '🚨', alerta: '⚠️', informativo: 'ℹ️' };
+  const emoji = emojis[tipo] || '📢';
+
+  const conteudo = `
+      <div style="text-align:center;margin-bottom:24px;">
+        <span style="font-size:48px;">${emoji}</span>
+      </div>
+      <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:1.5px;text-align:center;">
+        Novo Aviso do Enviagora Hub
+      </p>
+      <h1 style="margin:0 0 16px;font-size:26px;font-weight:900;color:#1a2e24;letter-spacing:-0.8px;line-height:1.2;text-align:center;">
+        ${titulo}
+      </h1>
+      <div style="background:#f8fafc;border-radius:16px;padding:32px;border:1px solid #e2e8f0;margin-bottom:32px;">
+        <p style="margin:0;font-size:16px;color:#334155;line-height:1.7;white-space:pre-wrap;">${mensagem}</p>
+      </div>
+
+      <p style="margin:0 0 24px;font-size:14px;color:#64748b;text-align:center;line-height:1.6;">
+        Um novo comunicado importante foi publicado. <br/>Clique no botão abaixo para acessar o portal e ver <strong>todos os avisos</strong>.
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="center">
+            <table cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="background:#1a4731;border-radius:12px;box-shadow:0 4px 12px rgba(26,71,49,0.2);">
+                  <a href="${process.env.FRONTEND_URL}/dashboard/avisos/lista"
+                     style="display:inline-block;color:#ffffff;text-decoration:none;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:700;padding:18px 48px;text-transform:uppercase;letter-spacing:1px;">
+                    VER TODOS OS AVISOS &nbsp;→
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    `;
+
+  await transporter.sendMail({
+    from: `"Enviagora Hub" <${process.env.EMAIL_USER}>`,
+    bcc: emails,
+    subject: `${emoji} Novo Aviso: ${titulo}`,
+    html: emailBase(conteudo)
+  });
+}
+
+async function enviarNoticiaGeral(emails, titulo, mes, ano) {
+  const conteudo = `
+      <div style="text-align:center;margin-bottom:24px;">
+        <span style="font-size:48px;">📰</span>
+      </div>
+      <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#1a2e24;letter-spacing:-1px;line-height:1.2;text-align:center;">
+        Enviagora <span style="color:#2d8f5e;">News</span>
+      </h1>
+      <p style="margin:0 0 32px;font-size:16px;color:#64748b;text-align:center;font-weight:500;">
+        A edição de <strong style="color:#1a2e24;">${mes}/${ano}</strong> já está disponível!
+      </p>
+      
+      <div style="background:linear-gradient(135deg, #1a4731 0%, #2d8f5e 100%);border-radius:20px;padding:40px;color:#ffffff;text-align:center;margin-bottom:32px;box-shadow:0 10px 20px rgba(26,71,49,0.1);">
+        <h2 style="margin:0 0 12px;font-size:20px;font-weight:800;letter-spacing:-0.5px;">${titulo}</h2>
+        <p style="margin:0 0 24px;font-size:14px;opacity:0.8;">Confira as últimas novidades, conquistas e avisos mensais nesta nova edição.</p>
+        <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+          <tr>
+            <td style="background:#ffffff;border-radius:10px;">
+              <a href="${process.env.FRONTEND_URL}/dashboard/news"
+                 style="display:inline-block;color:#1a4731;text-decoration:none;font-family:'Inter',Arial,sans-serif;font-size:13px;font-weight:800;padding:14px 30px;text-transform:uppercase;">
+                LER AGORA &nbsp;📖
+              </a>
+            </td>
+          </tr>
+        </table>
+      </div>
+    `;
+
+  await transporter.sendMail({
+    from: `"Enviagora News" <${process.env.EMAIL_USER}>`,
+    bcc: emails,
+    subject: `📰 Enviagora News: ${mes}/${ano} já disponível!`,
+    html: emailBase(conteudo)
+  });
+}
+
+module.exports = { enviarEmailAcesso, enviarEmailResetSenha, enviarAvisoGeral, enviarNoticiaGeral };

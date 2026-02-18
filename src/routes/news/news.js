@@ -3,6 +3,7 @@ const multer = require("multer");
 const { supabase } = require("../../config/db");
 const authMiddleware = require("../../middlewares/authMiddleware");
 const authorizeRoles = require("../../middlewares/authorizeRoles");
+const { enviarNoticiaGeral } = require("../../utils/email");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -31,7 +32,7 @@ router.post("/", authMiddleware, authorizeRoles('admin'), upload.fields([
     { name: 'capa', maxCount: 1 }
 ]), async (req, res) => {
     try {
-        const { titulo, mes_referencia, ano_referencia } = req.body;
+        const { titulo, mes_referencia, ano_referencia, notificarEmail } = req.body;
         const files = req.files;
 
         if (!files.pdf) {
@@ -42,7 +43,6 @@ router.post("/", authMiddleware, authorizeRoles('admin'), upload.fields([
         let capaUrl = null;
 
         console.log(`[News] Iniciando publicação: ${titulo}`);
-        console.log(`[News] Arquivos recebidos: PDF(${!!files.pdf}), Capa(${!!files.capa})`);
 
         // 1. Upload PDF
         const pdfPath = `news/${ano_referencia}/${Date.now()}_${pdfFile.originalname}`;
@@ -50,13 +50,9 @@ router.post("/", authMiddleware, authorizeRoles('admin'), upload.fields([
             .from("news")
             .upload(pdfPath, pdfFile.buffer, { contentType: "application/pdf" });
 
-        if (pdfError) {
-            console.error("[News] Erro upload PDF:", pdfError);
-            throw pdfError;
-        }
+        if (pdfError) throw pdfError;
 
         const { data: { publicUrl: pdfUrl } } = supabase.storage.from("news").getPublicUrl(pdfPath);
-        console.log(`[News] PDF Uploaded: ${pdfUrl}`);
 
         // 2. Upload Capa (Opcional)
         if (files.capa && files.capa.length > 0) {
@@ -66,14 +62,10 @@ router.post("/", authMiddleware, authorizeRoles('admin'), upload.fields([
                 .from("news")
                 .upload(capaPath, capaFile.buffer, { contentType: capaFile.mimetype || 'image/jpeg' });
 
-            if (capaError) {
-                console.error("[News] Erro upload Capa:", capaError);
-                throw capaError;
-            }
+            if (capaError) throw capaError;
 
             const { data: { publicUrl: generatedCapaUrl } } = supabase.storage.from("news").getPublicUrl(capaPath);
             capaUrl = generatedCapaUrl;
-            console.log(`[News] Capa Uploaded: ${capaUrl}`);
         }
 
         // 4. Salvar no Banco
@@ -87,9 +79,23 @@ router.post("/", authMiddleware, authorizeRoles('admin'), upload.fields([
                 capa_url: capaUrl
             });
 
-        if (dbError) {
-            console.error("[News] Erro DB:", dbError);
-            throw dbError;
+        if (dbError) throw dbError;
+
+        // 📧 Notificação por Email
+        if (notificarEmail === "true" || notificarEmail === true) {
+            const { data: users } = await supabase
+                .from("users")
+                .select("email")
+                .eq("role", "funcionario");
+
+            if (users && users.length > 0) {
+                const emailList = users.map(u => u.email);
+                const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+                const monthName = monthNames[parseInt(mes_referencia) - 1];
+
+                enviarNoticiaGeral(emailList, titulo, monthName, ano_referencia)
+                    .catch(e => console.error("Erro email news:", e));
+            }
         }
 
         return res.json({ ok: true, message: "Enviagora News publicado com sucesso!" });
