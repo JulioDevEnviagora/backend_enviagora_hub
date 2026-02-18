@@ -16,12 +16,14 @@ const holeritesRoutes = require('./routes/holerites/holerites');
 const newsRoutes = require('./routes/news/news');
 const announcementsRoutes = require('./routes/announcements/announcements');
 
+const { testarConexao } = require('./config/db');
+
 const app = express();
 const port = process.env.PORT || 3005;
 
-// ===============================
-// CORS CONFIG CORRIGIDO
-// ===============================
+/* ===============================
+   CORS CONFIG SEGURO
+=============================== */
 
 const allowedOrigins = [
     "http://localhost:3000",
@@ -33,7 +35,7 @@ if (process.env.FRONTEND_URL) {
 }
 
 app.use(cors({
-    origin: function (origin, callback) {
+    origin: (origin, callback) => {
         if (!origin) return callback(null, true);
 
         const normalizedOrigin = origin.replace(/\/$/, "");
@@ -41,99 +43,111 @@ app.use(cors({
         if (allowedOrigins.includes(normalizedOrigin)) {
             callback(null, true);
         } else {
+            console.warn("❌ CORS bloqueado:", origin);
             callback(new Error("Not allowed by CORS"));
         }
     },
-    credentials: true
+    credentials: true,
 }));
 
-// ⚠️ REMOVIDO app.options('*', cors()); (quebrava no Express novo)
+/* ===============================
+   Middlewares Globais
+=============================== */
 
-// ===============================
-// Middlewares Globais
-// ===============================
-
-// ⚠️ IMPORTANTE: cookieParser() deve vir DEPOIS do CORS
 app.use(cookieParser());
 
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    console.log(`[Debug] Origin: ${req.headers.origin}`);
-    console.log(`[Debug] Cookies recebidos:`, req.cookies);
-    console.log(`[Debug] Headers Cookie:`, req.headers.cookie);
-    next();
-});
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// 🔒 REMOVIDO LOG DE COOKIES EM PRODUÇÃO
+if (process.env.NODE_ENV !== 'production') {
+    app.use((req, res, next) => {
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+        next();
+    });
+}
 
-// ===============================
-// Rotas Públicas
-// ===============================
+/* ===============================
+   Rotas Públicas
+=============================== */
 
 app.use("/api/auth/login", loginRoutes);
 app.use("/api/auth/forgot-password", forgotPasswordRoutes);
 app.use("/api/auth/reset-password", resetPasswordRoutes);
 app.use("/api/auth", sessionRoutes);
 
-// ===============================
-// Rotas Protegidas
-// ===============================
+/* ===============================
+   Rotas Protegidas
+=============================== */
 
+// 🔒 Apenas ADMIN pode listar colaboradores
 app.use(
     "/api/colaboradores",
     authMiddleware,
+    authorizeRoles('admin'),
     colaboradoresRoutes
 );
 
+// 🔒 Holerites: autenticado (controle fino deve estar na rota)
 app.use(
     "/api/holerites",
     authMiddleware,
     holeritesRoutes
 );
 
+// 🔒 News protegida
 app.use(
     "/api/news",
+    authMiddleware,
     newsRoutes
 );
 
+// 🔒 Announcements protegida
 app.use(
     "/api/announcements",
     authMiddleware,
     announcementsRoutes
 );
 
-// ===============================
-// Health Check
-// ===============================
+/* ===============================
+   Health Check
+=============================== */
 
 app.get('/', (req, res) => {
     res.json({ message: 'API rodando' });
 });
 
-// ===============================
-// Inicialização
-// ===============================
-
-const { testarConexao } = require('./config/db');
+/* ===============================
+   Inicialização
+=============================== */
 
 const server = app.listen(port, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando na porta ${port}`);
     testarConexao();
 });
 
-// Timeouts maiores
 server.requestTimeout = 600000;
 server.headersTimeout = 610000;
 server.keepAliveTimeout = 600000;
 
-// ===============================
-// Tratamento de Erros
-// ===============================
+/* ===============================
+   Error Handler Global
+=============================== */
+
+app.use((err, req, res, next) => {
+    console.error("🔥 Erro global:", err.message);
+    res.status(500).json({
+        error: "Erro interno do servidor"
+    });
+});
+
+/* ===============================
+   Process Handlers
+=============================== */
 
 server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-        console.error(`❌ Erro: A porta ${port} já está em uso.`);
+        console.error(`❌ Porta ${port} já está em uso.`);
     } else {
         console.error('❌ Erro no servidor:', err);
     }
@@ -144,10 +158,6 @@ process.on('uncaughtException', (err) => {
     console.error('💥 Uncaught Exception:', err);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('🌐 Unhandled Rejection em:', promise, 'razão:', reason);
-});
-
-process.on('exit', (code) => {
-    console.log(`✌️ Processo finalizado com código: ${code}`);
+process.on('unhandledRejection', (reason) => {
+    console.error('🌐 Unhandled Rejection:', reason);
 });
