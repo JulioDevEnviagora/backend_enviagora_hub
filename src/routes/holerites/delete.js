@@ -1,12 +1,12 @@
-const express = require("express");
-const { supabase } = require("../../config/db");
+const authMiddleware = require("../../middlewares/authMiddleware");
+const authorizeRoles = require("../../middlewares/authorizeRoles");
 
 const router = express.Router();
 
 /* =====================================================
    🔹 DELETE /holerites/:id
 ===================================================== */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", authMiddleware, authorizeRoles('admin'), async (req, res) => {
     try {
         const { id } = req.params;
 

@@ -1,7 +1,5 @@
-const express = require("express");
-const multer = require("multer");
-const { supabase } = require("../../config/db");
-const { extractEmployeeInfoFromPDF } = require("../../lib/pdfParser");
+const authMiddleware = require("../../middlewares/authMiddleware");
+const authorizeRoles = require("../../middlewares/authorizeRoles");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -9,7 +7,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 /* =====================================================
    🔹 POST /holerites/upload
 ===================================================== */
-router.post("/", upload.array("files"), async (req, res) => {
+router.post("/", authMiddleware, authorizeRoles('admin'), upload.array("files"), async (req, res) => {
     const start = Date.now();
     try {
         const { competencia } = req.body;

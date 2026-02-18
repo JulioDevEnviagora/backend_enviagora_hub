@@ -1,17 +1,22 @@
-const express = require("express");
-const { supabase } = require("../../config/db");
+const authMiddleware = require("../../middlewares/authMiddleware");
 
 const router = express.Router();
 
 /* =====================================================
    🔹 GET /holerites
 ===================================================== */
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
     try {
-        const { data, error } = await supabase
+        let query = supabase
             .from("holerites")
-            .select("*")
-            .order("created_at", { ascending: false });
+            .select("*");
+
+        // 🛡️ Segurança: Se não for admin, filtra pelo ID do próprio usuário
+        if (req.user.role !== 'admin') {
+            query = query.eq("user_id", req.user.id);
+        }
+
+        const { data, error } = await query.order("created_at", { ascending: false });
 
         if (error) {
             return res.status(500).json({
