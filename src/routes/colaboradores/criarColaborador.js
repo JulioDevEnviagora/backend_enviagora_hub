@@ -3,11 +3,19 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { enviarEmailAcesso } = require('../../utils/email');
 
+// 🔒 HIERARQUIA DE ROLES
+const ROLE_HIERARCHY = {
+  'funcionario': 1,
+  'assistente': 2, 
+  'rh': 3,
+  'admin': 4
+};
+
 function gerarSenhaProvisoria(tamanho = 10) {
   return crypto.randomBytes(tamanho)
-    .toString('base64')
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .slice(0, tamanho);
+  .toString('base64')
+  .replace(/[^a-zA-Z0-9]/g, '')
+  .slice(0, tamanho);
 }
 
 module.exports = async (req, res) => {
@@ -37,7 +45,21 @@ module.exports = async (req, res) => {
       });
     }
 
-    // 🔎 Verifica duplicidade
+    // � VALIDAR HIERARQUIA DE ROLES
+    const userRole = req.user.role;
+    const userLevel = ROLE_HIERARCHY[userRole];
+    const novoRole = role || 'funcionario';
+    const novoLevel = ROLE_HIERARCHY[novoRole];
+
+    // Ninguém pode criar alguém do mesmo nível ou superior (exceto admin)
+    if (userRole !== 'admin' && userLevel <= novoLevel) {
+      return res.status(403).json({
+        error: `Você (${userRole}) não pode criar um ${novoRole}`,
+        details: 'Apenas admin pode criar alguém do mesmo nível ou superior'
+      });
+    }
+
+    // �🔎 Verifica duplicidade
     const { data: existingUser, error: checkError } = await supabase
       .from('users')
       .select('id')

@@ -1,7 +1,7 @@
 const express = require("express");
 const { supabase } = require("../../config/db");
 const authMiddleware = require("../../middlewares/authMiddleware");
-const authorizeRoles = require("../../middlewares/authorizeRoles");
+const { authorizeRoles } = require("../../middlewares/authorizeRoles");
 const { enviarAvisoGeral } = require("../../utils/email");
 
 const router = express.Router();
@@ -23,8 +23,8 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-// 🚀 POST /api/announcements (Apenas Admin)
-router.post("/", authMiddleware, authorizeRoles('admin'), async (req, res) => {
+// 🚀 POST /api/announcements (RH e Admin)
+router.post("/", authMiddleware, authorizeRoles('rh'), async (req, res) => {
     try {
         const { titulo, conteudo, tipo, notificarEmail } = req.body;
 

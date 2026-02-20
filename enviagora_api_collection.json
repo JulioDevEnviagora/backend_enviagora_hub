@@ -2,18 +2,36 @@
     "info": {
         "_postman_id": "7a3b4c5d-1e2f-3g4h-5i6j-7k8l9m0n1o2p",
         "name": "Enviagora Hub API",
-        "description": "Coleção de rotas para o sistema de RH Enviagora Hub. Inclui gestão de colaboradores e processamento automático de holerites via PDF.",
+        "description": "Coleção completa de rotas para o sistema de RH Enviagora Hub.\n\n**Como usar:**\n1. Importe esta collection no Postman\n2. A variável `base_url` já está configurada para `http://localhost:3005`\n3. Faça login primeiro (salva o cookie de sessão automaticamente)\n4. Execute os demais endpoints normalmente\n\n**Autenticação:** Cookie-based (JWT via cookie `token`)",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
         {
-            "name": "Autenticação",
+            "name": "🔐 Autenticação",
             "item": [
                 {
                     "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    console.log('✅ Login realizado. Cookie de sessão salvo automaticamente.');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "POST",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
                         "body": {
                             "mode": "raw",
                             "raw": "{\n    \"email\": \"admin@enviagora.com.br\",\n    \"password\": \"senha123\"\n}",
@@ -34,27 +52,47 @@
                                 "login"
                             ]
                         },
-                        "description": "Realiza login no sistema. Em caso de sucesso, define um cookie 'token' que é enviado automaticamente nas próximas requisições."
+                        "description": "Realiza login no sistema. Em caso de sucesso, define um cookie `token` (JWT) que é enviado automaticamente nas próximas requisições.\n\n**Resposta de sucesso:**\n```json\n{\n  \"ok\": true,\n  \"user\": {\n    \"id\": \"uuid\",\n    \"nome\": \"Admin\",\n    \"email\": \"admin@enviagora.com.br\",\n    \"role\": \"admin\"\n  }\n}\n```"
                     },
                     "response": []
                 },
                 {
-                    "name": "Verificar Sessão",
+                    "name": "Verificar Sessão (Me)",
                     "request": {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{base_url}}/api/auth/session",
+                            "raw": "{{base_url}}/api/auth/me",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "api",
                                 "auth",
-                                "session"
+                                "me"
                             ]
                         },
-                        "description": "Verifica se o usuário está autenticado e retorna os dados básicos do perfil."
+                        "description": "Verifica se o usuário está autenticado e retorna os dados do perfil atual."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "logout"
+                            ]
+                        },
+                        "description": "Encerra a sessão do usuário, removendo o cookie de autenticação."
                     },
                     "response": []
                 },
@@ -62,10 +100,15 @@
                     "name": "Esqueci minha senha (Solicitar)",
                     "request": {
                         "method": "POST",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"email\": \"usuario@email.com\"\n}",
+                            "raw": "{\n    \"email\": \"usuario@enviagora.com.br\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -88,13 +131,18 @@
                     "response": []
                 },
                 {
-                    "name": "Resetar Senha (Token)",
+                    "name": "Resetar Senha (com Token)",
                     "request": {
                         "method": "POST",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"email\": \"usuario@email.com\",\n    \"token\": \"TOKEN_RECEBIDO_POR_EMAIL\",\n    \"newPassword\": \"nova_senha_123\"\n}",
+                            "raw": "{\n    \"email\": \"usuario@enviagora.com.br\",\n    \"token\": \"TOKEN_RECEBIDO_POR_EMAIL\",\n    \"newPassword\": \"nova_senha_segura_123\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -118,10 +166,10 @@
             ]
         },
         {
-            "name": "Colaboradores",
+            "name": "👥 Colaboradores",
             "item": [
                 {
-                    "name": "Listar Colaboradores",
+                    "name": "Listar Todos",
                     "request": {
                         "method": "GET",
                         "header": [],
@@ -135,12 +183,12 @@
                                 "colaboradores"
                             ]
                         },
-                        "description": "Lista todos os colaboradores cadastrados no sistema."
+                        "description": "Lista todos os colaboradores cadastrados no sistema. Requer autenticação."
                     },
                     "response": []
                 },
                 {
-                    "name": "Buscar Colaborador por ID",
+                    "name": "Buscar por ID",
                     "request": {
                         "method": "GET",
                         "header": [],
@@ -157,7 +205,8 @@
                             "variable": [
                                 {
                                     "key": "id",
-                                    "value": "ID_DO_USUARIO"
+                                    "value": "{{colaborador_id}}",
+                                    "description": "UUID do colaborador"
                                 }
                             ]
                         }
@@ -168,10 +217,15 @@
                     "name": "Criar Colaborador",
                     "request": {
                         "method": "POST",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"nome\": \"João Silva\",\n    \"email\": \"joao@enviagora.com.br\",\n    \"cpf\": \"123.456.789-00\",\n    \"password\": \"123456\",\n    \"role\": \"funcionario\",\n    \"codigo_holerite\": \"1001\",\n    \"setor\": \"Logística\",\n    \"cargo\": \"Ajudante\"\n}",
+                            "raw": "{\n    \"nome\": \"João Silva\",\n    \"email\": \"joao@enviagora.com.br\",\n    \"cpf\": \"123.456.789-00\",\n    \"password\": \"123456\",\n    \"role\": \"funcionario\",\n    \"matricula\": \"12345\",\n    \"codigo_holerite\": \"1001\",\n    \"setor\": \"Logística\",\n    \"cargo\": \"Ajudante\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -188,7 +242,7 @@
                                 "colaboradores"
                             ]
                         },
-                        "description": "Cria um novo colaborador. O 'codigo_holerite' é fundamental para que o sistema consiga vincular PDFs automaticamente no futuro."
+                        "description": "Cria um novo colaborador.\n\n**Campos importantes:**\n- `matricula`: Crachá/matrícula no Kairos (numérico) — usado para buscar horas extras\n- `codigo_holerite`: Código para vincular PDFs automaticamente\n- `role`: `admin` ou `funcionario`"
                     },
                     "response": []
                 },
@@ -196,10 +250,15 @@
                     "name": "Editar Colaborador",
                     "request": {
                         "method": "PUT",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"nome\": \"João Silva Editado\",\n    \"setor\": \"Transportes\"\n}",
+                            "raw": "{\n    \"nome\": \"João Silva Editado\",\n    \"setor\": \"Transportes\",\n    \"matricula\": \"12345\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -219,7 +278,7 @@
                             "variable": [
                                 {
                                     "key": "id",
-                                    "value": "ID_DO_USUARIO"
+                                    "value": "{{colaborador_id}}"
                                 }
                             ]
                         }
@@ -230,10 +289,15 @@
                     "name": "Alterar Senha",
                     "request": {
                         "method": "POST",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"newPassword\": \"nova_senha_66\"\n}",
+                            "raw": "{\n    \"newPassword\": \"nova_senha_segura_456\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -254,7 +318,7 @@
                             "variable": [
                                 {
                                     "key": "id",
-                                    "value": "ID_DO_USUARIO"
+                                    "value": "{{colaborador_id}}"
                                 }
                             ]
                         }
@@ -279,7 +343,7 @@
                             "variable": [
                                 {
                                     "key": "id",
-                                    "value": "ID_DO_USUARIO"
+                                    "value": "{{colaborador_id}}"
                                 }
                             ]
                         }
@@ -289,7 +353,7 @@
             ]
         },
         {
-            "name": "Holerites",
+            "name": "📄 Holerites",
             "item": [
                 {
                     "name": "Listar Holerites",
@@ -306,7 +370,7 @@
                                 "holerites"
                             ]
                         },
-                        "description": "Lista todos os holerites processados. Contém metadados como competência e link para o arquivo no storage."
+                        "description": "Lista todos os holerites. Admin vê todos; funcionário vê apenas os próprios."
                     },
                     "response": []
                 },
@@ -320,12 +384,13 @@
                             "formdata": [
                                 {
                                     "key": "competencia",
-                                    "value": "Janeiro 2024",
+                                    "value": "01/2025",
+                                    "description": "Competência no formato MM/YYYY",
                                     "type": "text"
                                 },
                                 {
                                     "key": "files",
-                                    "description": "Selecione um ou mais PDFs",
+                                    "description": "Um ou mais arquivos PDF de holerites",
                                     "type": "file",
                                     "src": []
                                 }
@@ -342,7 +407,7 @@
                                 "upload"
                             ]
                         },
-                        "description": "Endpoint inteligente. Você envia um lote de PDFs, o sistema lê o conteúdo de cada um, identifica o funcionário pelo número da matrícula/código dentro do documento e vincula automaticamente ao colaborador correto."
+                        "description": "**Somente Admin.** Faz upload em lote de PDFs. O sistema lê automaticamente o conteúdo de cada PDF, identifica o funcionário pelo código interno e vincula ao colaborador correto no Supabase."
                     },
                     "response": []
                 },
@@ -365,10 +430,12 @@
                             "variable": [
                                 {
                                     "key": "id",
-                                    "value": "ID_DO_HOLERITE"
+                                    "value": "{{holerite_id}}",
+                                    "description": "UUID do holerite"
                                 }
                             ]
-                        }
+                        },
+                        "description": "Faz download do PDF. Funcionário só pode baixar os próprios holerites."
                     },
                     "response": []
                 },
@@ -382,12 +449,12 @@
                             "formdata": [
                                 {
                                     "key": "competencia",
-                                    "value": "Fevereiro 2024",
+                                    "value": "02/2025",
                                     "type": "text"
                                 },
                                 {
                                     "key": "file",
-                                    "description": "Se quiser substituir o PDF, envie aqui",
+                                    "description": "Novo PDF (opcional — substitui o atual)",
                                     "type": "file",
                                     "src": []
                                 }
@@ -406,11 +473,10 @@
                             "variable": [
                                 {
                                     "key": "id",
-                                    "value": "ID_DO_HOLERITE"
+                                    "value": "{{holerite_id}}"
                                 }
                             ]
-                        },
-                        "description": "Caso envie um novo arquivo, o sistema valida se o PDF pertence ao mesmo colaborador antes de substituir no Storage."
+                        }
                     },
                     "response": []
                 },
@@ -432,7 +498,7 @@
                             "variable": [
                                 {
                                     "key": "id",
-                                    "value": "ID_DO_HOLERITE"
+                                    "value": "{{holerite_id}}"
                                 }
                             ]
                         }
@@ -454,6 +520,198 @@
                                 "holerites",
                                 "stats",
                                 "summary"
+                            ]
+                        },
+                        "description": "Retorna estatísticas gerais dos holerites cadastrados."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "⏰ Controle de Ponto — Horas Extras",
+            "description": "Endpoints para consulta de horas extras via integração com a API Kairos.\n\n**Fluxo para funcionário:**\n1. GET /minha-matricula → obtém o crachá\n2. GET /horas-extras/:matricula → obtém as horas extras\n\n**Fluxo para admin:**\n1. GET /horas-extras/admin → painel completo",
+            "item": [
+                {
+                    "name": "Minha Matrícula",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/controle-ponto/minha-matricula",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "controle-ponto",
+                                "minha-matricula"
+                            ]
+                        },
+                        "description": "Retorna a matrícula (crachá) do usuário logado a partir do Supabase.\n\n**Resposta de sucesso:**\n```json\n{\n  \"ok\": true,\n  \"data\": {\n    \"id\": \"uuid\",\n    \"nome\": \"João Silva\",\n    \"email\": \"joao@enviagora.com.br\",\n    \"matricula\": \"12345\",\n    \"mensagem\": \"Matrícula encontrada\"\n  }\n}\n```\n\n**⚠️ Se matricula for null:** O usuário não possui matrícula cadastrada no Supabase. Cadastre via endpoint de Colaboradores."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Horas Extras — Individual (por matrícula)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/controle-ponto/horas-extras/{{matricula}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "controle-ponto",
+                                "horas-extras",
+                                "{{matricula}}"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "matricula",
+                                    "value": "12345",
+                                    "description": "Crachá/matrícula numérica do funcionário no Kairos"
+                                }
+                            ]
+                        },
+                        "description": "Consulta horas extras dos últimos 30 dias de um funcionário específico via API Kairos.\n\n**Internamente envia para Kairos:**\n```json\n{\n  \"IdsPessoa\": [12345],\n  \"DataInicio\": \"DD-MM-YYYY\",\n  \"DataFim\": \"DD-MM-YYYY\",\n  \"RequestType\": \"2\",\n  \"ResponseType\": \"AS400V1\"\n}\n```\n\n**Resposta de sucesso:**\n```json\n{\n  \"ok\": true,\n  \"data\": {\n    \"cracha\": 12345,\n    \"periodo\": {\n      \"dataInicio\": \"21-01-2025\",\n      \"dataFim\": \"20-02-2025\",\n      \"automatico\": true\n    },\n    \"totalMinutos\": 180,\n    \"totalHorasFormatado\": \"03:00\",\n    \"totalHorasDecimal\": \"3.00\",\n    \"detalhes\": [\n      {\n        \"data\": \"2025-02-10\",\n        \"tipoHoraExtra\": \"HE 50%\",\n        \"quantidadeMinutos\": 90,\n        \"quantidadeHorasFormatado\": \"01:30\"\n      }\n    ]\n  }\n}\n```\n\n**Erros comuns:**\n- `400` — Matrícula inválida ou não numérica\n- `500` — Falha na comunicação com Kairos"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Horas Extras — Painel Admin",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/controle-ponto/horas-extras/admin",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "controle-ponto",
+                                "horas-extras",
+                                "admin"
+                            ]
+                        },
+                        "description": "**Somente Admin.** Busca horas extras de TODOS os funcionários cadastrados no Kairos nos últimos 30 dias.\n\nO endpoint:\n1. Busca todos os funcionários via `People/SearchPeople` (com paginação)\n2. Busca horas extras via `ExtraHour/GetExtraHours` em lotes de 10 (concorrência limitada)\n3. Consolida e retorna ranking + resumo\n\n**Resposta de sucesso:**\n```json\n{\n  \"ok\": true,\n  \"data\": {\n    \"periodo\": {\n      \"dataInicio\": \"21-01-2025\",\n      \"dataFim\": \"20-02-2025\"\n    },\n    \"resumo\": {\n      \"totalFuncionarios\": 42,\n      \"funcionariosComHorasExtras\": 15,\n      \"totalGeralMinutos\": 2400,\n      \"totalGeralHorasFormatado\": \"40:00\",\n      \"totalGeralHorasDecimal\": \"40.00\",\n      \"mediaHorasDecimal\": \"2.67\"\n    },\n    \"funcionarios\": [\n      {\n        \"funcionario\": {\n          \"cracha\": 12345,\n          \"matricula\": \"12345\",\n          \"nome\": \"João Silva\",\n          \"cargo\": \"Ajudante\"\n        },\n        \"totalMinutos\": 180,\n        \"totalHorasFormatado\": \"03:00\",\n        \"totalHorasDecimal\": \"3.00\",\n        \"totalRegistros\": 2\n      }\n    ]\n  }\n}\n```\n\n**⚠️ Atenção:** Esta rota pode demorar de 10 a 60 segundos dependendo do número de funcionários."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Horas Extras — Todos (POST com período customizado)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"dataInicio\": \"01-01-2025\",\n    \"dataFim\": \"31-01-2025\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/controle-ponto/horas-extras",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "controle-ponto",
+                                "horas-extras"
+                            ]
+                        },
+                        "description": "Consulta horas extras de todos os funcionários em um período customizado.\n\n**Campos do payload:**\n- `dataInicio`: Formato `DD-MM-YYYY`\n- `dataFim`: Formato `DD-MM-YYYY`\n\n**Internamente envia para Kairos (por funcionário):**\n```json\n{\n  \"IdsPessoa\": [12345],\n  \"DataInicio\": \"01-01-2025\",\n  \"DataFim\": \"31-01-2025\",\n  \"RequestType\": \"2\",\n  \"ResponseType\": \"AS400V1\"\n}\n```"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "📣 Avisos e Comunicados",
+            "item": [
+                {
+                    "name": "Listar Avisos",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/announcements",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "announcements"
+                            ]
+                        },
+                        "description": "Lista todos os avisos internos publicados."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Criar Aviso",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"titulo\": \"Reunião obrigatória\",\n    \"conteudo\": \"Todos os colaboradores devem comparecer à reunião na sexta-feira às 14h.\",\n    \"tipo\": \"urgente\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/announcements",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "announcements"
+                            ]
+                        },
+                        "description": "**Somente Admin.** Cria um novo aviso interno.\n\n**Tipos disponíveis:** `informativo`, `alerta`, `urgente`"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Deletar Aviso",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/announcements/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "announcements",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "{{aviso_id}}"
+                                }
                             ]
                         }
                     },
@@ -486,7 +744,32 @@
         {
             "key": "base_url",
             "value": "http://localhost:3005",
-            "type": "string"
+            "type": "string",
+            "description": "URL base do backend. Altere para a URL de produção quando necessário."
+        },
+        {
+            "key": "matricula",
+            "value": "12345",
+            "type": "string",
+            "description": "Crachá/matrícula numérica do funcionário no Kairos. Substitua pelo número real."
+        },
+        {
+            "key": "colaborador_id",
+            "value": "",
+            "type": "string",
+            "description": "UUID do colaborador no Supabase"
+        },
+        {
+            "key": "holerite_id",
+            "value": "",
+            "type": "string",
+            "description": "UUID do holerite no Supabase"
+        },
+        {
+            "key": "aviso_id",
+            "value": "",
+            "type": "string",
+            "description": "UUID do aviso no Supabase"
         }
     ]
 }

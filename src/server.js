@@ -5,7 +5,7 @@ const cors = require('cors');
 const cookieParser = require("cookie-parser");
 
 const authMiddleware = require('./middlewares/authMiddleware');
-const authorizeRoles = require('./middlewares/authorizeRoles');
+const { authorizeRoles, authorizeDelete } = require('./middlewares/authorizeRoles');
 
 const loginRoutes = require('./routes/auth/login');
 const sessionRoutes = require('./routes/auth/session');
@@ -77,36 +77,44 @@ app.use("/api/auth/reset-password", resetPasswordRoutes);
 app.use("/api/auth", sessionRoutes);
 
 /* ===============================
-   Rotas Protegidas
+   Rotas Protegidas - Hierarquia: admin > rh > assistente > funcionario
 =============================== */
 
-// 🔒 Apenas ADMIN pode listar colaboradores
+// 🔒 Assistente, RH e Admin podem listar colaboradores
 app.use(
     "/api/colaboradores",
     authMiddleware,
-    authorizeRoles('admin'),
+    authorizeRoles('funcionario'), // Qualquer role acima de funcionário
     colaboradoresRoutes
 );
 
-// 🔒 Holerites: autenticado (controle fino deve estar na rota)
+// 🔒 RH, Assistente e Admin podem acessar holerites
 app.use(
     "/api/holerites",
     authMiddleware,
+    authorizeRoles('funcionario'), // Qualquer role acima de funcionário
     holeritesRoutes
 );
 
-// 🔒 News protegida
+// 🔒 Todos autenticados podem acessar news
 app.use(
     "/api/news",
     authMiddleware,
     newsRoutes
 );
 
-// 🔒 Announcements protegida
+// 🔒 Todos autenticados podem acessar announcements
 app.use(
     "/api/announcements",
     authMiddleware,
     announcementsRoutes
+);
+
+// 🔒 Todos autenticados podem acessar horas extras
+app.use(
+    "/api/controle-ponto",
+    authMiddleware,
+    require('./routes/controle_ponto/controle_ponto')
 );
 
 /* ===============================

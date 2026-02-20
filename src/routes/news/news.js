@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const { supabase } = require("../../config/db");
 const authMiddleware = require("../../middlewares/authMiddleware");
-const authorizeRoles = require("../../middlewares/authorizeRoles");
+const { authorizeRoles } = require("../../middlewares/authorizeRoles");
 const { enviarNoticiaGeral } = require("../../utils/email");
 
 const router = express.Router();
@@ -26,8 +26,8 @@ router.get("/", authMiddleware, async (req, res) => {
     }
 });
 
-// 🚀 POST /api/news (Apenas Admin)
-router.post("/", authMiddleware, authorizeRoles('admin'), upload.fields([
+// 🚀 POST /api/news (RH e Admin)
+router.post("/", authMiddleware, authorizeRoles('rh'), upload.fields([
     { name: 'pdf', maxCount: 1 },
     { name: 'capa', maxCount: 1 }
 ]), async (req, res) => {
